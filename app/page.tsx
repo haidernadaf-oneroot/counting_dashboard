@@ -276,6 +276,9 @@ export default function HomePage() {
   const [editValue, setEditValue] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [purging, setPurging] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [completeTruck, setCompleteTruck] = useState("");
+  const [completeDate, setCompleteDate] = useState("");
 
   useEffect(() => {
     fetchCachedMessage();
@@ -292,6 +295,32 @@ export default function HomePage() {
   async function fetchNext() {
     const res = await fetch(`${API}/fetch`, { method: "POST" });
     setMessage(await res.json());
+  }
+
+  function openCompleteModal() {
+    if (!message?.body) return;
+
+    setCompleteTruck(message.body.truck_number || "");
+    setCompleteDate(new Date().toISOString().split("T")[0]); // default today
+    setShowCompleteModal(true);
+  }
+
+  async function confirmComplete() {
+    try {
+      await fetch(`${API}/totals/complete`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          truck_number: completeTruck,
+          date: completeDate,
+        }),
+      });
+
+      setShowCompleteModal(false);
+      alert("SQS Count Completed ✅");
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   /** ⭐ APPROVE (IMPORTANT FIX — stores DB id) */
@@ -420,12 +449,19 @@ export default function HomePage() {
                       className="bg-black/40 p-2 rounded w-24"
                     />
                   </td>
-                  <td>
+                  <td className="flex gap-2">
                     <button
                       onClick={approve}
                       className="bg-blue-600 px-3 py-2 rounded"
                     >
                       Approve
+                    </button>
+
+                    <button
+                      onClick={openCompleteModal}
+                      className="bg-green-600 px-3 py-2 rounded"
+                    >
+                      Complete
                     </button>
                   </td>
                 </tr>
@@ -498,6 +534,58 @@ export default function HomePage() {
           <div className="mt-3 font-bold">Total Updated Count: {total}</div>
         </div>
       </div>
+
+      {showCompleteModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-white text-black p-6 rounded-xl w-96 shadow-2xl space-y-5">
+            <div className="text-xl font-bold text-gray-800">
+              Complete SQS Count
+            </div>
+
+            {/* Truck */}
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                Truck Number
+              </label>
+              <input
+                value={completeTruck}
+                onChange={(e) => setCompleteTruck(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+              />
+            </div>
+
+            {/* Date */}
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                Date
+              </label>
+              <input
+                type="date"
+                value={completeDate}
+                onChange={(e) => setCompleteDate(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+              />
+            </div>
+
+            {/* Buttons */}
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setShowCompleteModal(false)}
+                className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={confirmComplete}
+                className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
