@@ -255,7 +255,7 @@ import { useEffect, useState } from "react";
 
 type Msg = {
   id: string;
-  body: { truck_number?: string; count?: number } | null;
+  body: any; // 👈 change here
   receipt?: string;
 } | null;
 
