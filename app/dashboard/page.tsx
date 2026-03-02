@@ -29,11 +29,16 @@ export default function HomePage() {
   const [completeTruck, setCompleteTruck] = useState("");
   const [completeDate, setCompleteDate] = useState("");
 
+  // useEffect(() => {
+  //   fetchCachedMessage();
+  //   fetchStream();
+  //   const i = setInterval(fetchStream, 10000);
+  //   return () => clearInterval(i);
+  // }, []);
+
   useEffect(() => {
     fetchCachedMessage();
-    fetchStream();
-    const i = setInterval(fetchStream, 10000);
-    return () => clearInterval(i);
+    fetchStream(); // only once
   }, []);
 
   async function fetchCachedMessage() {
